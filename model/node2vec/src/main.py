@@ -74,6 +74,6 @@ if __name__ == "__main__":
     ds_end_time = tx_data["btime"].max()
     tx_in_data = data_dict["tx_in_data"]
     tx_out_data = data_dict["tx_out_data"]
-    aain, aain_G, tain = build_single_aain_and_tain(addr_data, tx_data, tx_in_data, tx_out_data, ds_begin_time)
+    aain, aain_G, tain = build_snapshot(addr_data, tx_data, tx_in_data, tx_out_data, ds_begin_time)
     features = learn(aain_G, cfg)
     # import ipdb; ipdb.set_trace()

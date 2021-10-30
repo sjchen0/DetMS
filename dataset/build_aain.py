@@ -24,7 +24,7 @@ def load_data(ds_num, cfg):
     )
     return ret
 
-def build_single_aain_and_tain(addr_data, tx_data, tx_in_data, tx_out_data, start_time, duration=3600, build_tain=False):
+def build_snapshot(addr_data, tx_data, tx_in_data, tx_out_data, start_time, duration=3600, build_tain=False):
     print("filtering data within time slot...")
     t1 = time.time()
     tx_data_filtered = tx_data.query('btime >= {} & btime <= {}'.format(start_time, start_time + duration))
@@ -38,7 +38,7 @@ def build_single_aain_and_tain(addr_data, tx_data, tx_in_data, tx_out_data, star
     t2 = time.time()
     # ipdb.set_trace()
     print("finished, using {:.2f} sec.".format(t2-t1))
-    print("start building AAIN...")
+    print("start building AAIN snapshot...")
     # data structure of aain: addr_from, addr_to, txID, time
     aain = []
     for txID in tqdm(tx_data_filtered_np[:,0]):
@@ -133,4 +133,4 @@ if __name__ == "__main__":
     ds_end_time = tx_data["btime"].max()
     tx_in_data = data_dict["tx_in_data"]
     tx_out_data = data_dict["tx_out_data"]
-    aain, aain_G, tain = build_single_aain_and_tain(addr_data, tx_data, tx_in_data, tx_out_data, 1414771239)
+    aain, aain_G, tain = build_snapshot(addr_data, tx_data, tx_in_data, tx_out_data, 1414771239)
