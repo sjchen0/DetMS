@@ -17,6 +17,7 @@ import sys
 import os
 sys.path.append("../../../dataset")
 import time
+import json
 from build_aain import *
 
 def read_graph():
@@ -72,6 +73,9 @@ if __name__ == "__main__":
         weighted=True,
         directed=True,
     )
+    # with open("../../../config/config.json", "r") as f:
+    #     cfg = json.load(f)
+    # cfg = json.load("../../../config/config.json")
     print("loading csv data...")
     t1 = time.time()
     data_dict = load_data(1, cfg)

@@ -51,17 +51,19 @@ def build_single_aain_and_tain(addr_data, tx_data, tx_in_data, tx_out_data, star
         and each receiving address contributes v_j. Observe that V ~= sum v_j due to the service charges.
         Then, weight[i,j] := v_j * v_i / V.
         '''
-        V = tx_in_data_filtered.loc[tx_in_data_filtered["txID"] == txID]["value"].sum()
-        addrs_from = tx_in_data_filtered_np[tx_in_data_filtered_np[:,0] == txID][:,1]
-        vs_from = tx_in_data_filtered_np[tx_in_data_filtered_np[:,0] == txID][:,2]
-        # if len(addrs_from) == 0:
-        #     print(txID, "addrs_from is empty")
-        addrs_to = tx_out_data_filtered_np[tx_out_data_filtered_np[:,0] == txID][:,1]
-        vs_to = tx_out_data_filtered_np[tx_out_data_filtered_np[:,0] == txID][:,2]
-        # if len(addrs_to) == 0:
-        #     print(txID, "addrs_to is empty")
-        # if len(addrs_from) != len(np.unique(addrs_from)) or len(addrs_to) != len(np.unique(addrs_to)):
-        #     print(addrs_from, addrs_to)
+        df_txin_txID = tx_in_data_filtered.loc[tx_in_data_filtered["txID"] == txID]
+        df_txout_txID = tx_out_data_filtered.loc[tx_out_data_filtered["txID"] == txID]
+        V = df_txin_txID["value"].sum()
+        a_v_txin_txID = df_txin_txID
+        a_v_txout_txID = df_txout_txID
+        if df_txin_txID.duplicated(subset=["addrID"]).any():
+            a_v_txin_txID = df_txin_txID.groupby(["addrID"], as_index=False)["value"].sum()
+        if df_txout_txID.duplicated(subset=["addrID"]).any():
+            a_v_txout_txID = df_txout_txID.groupby(["addrID"], as_index=False)["value"].sum()
+        addrs_from = a_v_txin_txID["addrID"].to_numpy()
+        vs_from = a_v_txin_txID["value"].to_numpy()
+        addrs_to = a_v_txout_txID["addrID"].to_numpy()
+        vs_to = a_v_txout_txID["value"].to_numpy()
         if len(addrs_from) == 0 or len(addrs_to) == 0:
             continue
         btime = dict_to_btime[txID]
@@ -79,7 +81,6 @@ def build_single_aain_and_tain(addr_data, tx_data, tx_in_data, tx_out_data, star
          [an,am]]
         '''
     aain = np.concatenate(aain)
-    # print(aain)
     aain_df = pd.DataFrame(aain, columns=['addr_from', 'addr_to', 'txID', 'time', 'weight'])
     aain_df = aain_df.astype({'addr_from': int, 'addr_to': int, 'txID': int, 'time': int})
     # check parallel edges
