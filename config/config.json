@@ -1,8 +1,8 @@
 {
-    "root_path": "/root/Challenge/Vincent/ESTR3108/archive",
-    "ds1_path": root_path+"dataset1_2014_11_1500000/",
-    "ds2_path": root_path+"dataset2_2015_6_1500000/",
-    "ds3_path": root_path+"dataset3_2016_1_1500000/",
+    "root_path": "/root/Challenge/Vincent/ESTR3108/archive/",
+    "ds1_path": "dataset1_2014_11_1500000/",
+    "ds2_path": "dataset2_2015_6_1500000/",
+    "ds3_path": "dataset3_2016_1_1500000/",
     "dimensions": 128,
     "walk_length": 80,
     "num_walks": 10,

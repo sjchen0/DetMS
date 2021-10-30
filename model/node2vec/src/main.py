@@ -57,25 +57,11 @@ def learn(nx_G, cfg):
     return features
 
 if __name__ == "__main__":
-    root_path="/root/Challenge/Vincent/ESTR3108/archive/"
-    cfg = dict(
-        ds1_path=root_path+"dataset1_2014_11_1500000/",
-        ds2_path=root_path+"dataset2_2015_6_1500000/",
-        ds3_path=root_path+"dataset3_2016_1_1500000",
-        dimensions=128,
-        walk_length=80,
-        num_walks=10,
-        window_size=10,
-        iter=1,
-        workers=8,
-        p=1,
-        q=1,
-        weighted=True,
-        directed=True,
-    )
-    # with open("../../../config/config.json", "r") as f:
-    #     cfg = json.load(f)
-    # cfg = json.load("../../../config/config.json")
+    with open("../../../config/config.json", "r") as f:
+        cfg = json.load(f)
+        cfg["ds1_path"] = cfg["root_path"] + cfg["ds1_path"]
+        cfg["ds2_path"] = cfg["root_path"] + cfg["ds2_path"]
+        cfg["ds3_path"] = cfg["root_path"] + cfg["ds3_path"]
     print("loading csv data...")
     t1 = time.time()
     data_dict = load_data(1, cfg)
@@ -84,9 +70,10 @@ if __name__ == "__main__":
     addr_data = data_dict["addr_data"]
     tx_data = data_dict["tx_data"]
     ds_begin_time = tx_data["btime"].min()
+    print(ds_begin_time)
     ds_end_time = tx_data["btime"].max()
     tx_in_data = data_dict["tx_in_data"]
     tx_out_data = data_dict["tx_out_data"]
-    aain, aain_G, tain = build_single_aain_and_tain(addr_data, tx_data, tx_in_data, tx_out_data, 1414771239)
+    aain, aain_G, tain = build_single_aain_and_tain(addr_data, tx_data, tx_in_data, tx_out_data, ds_begin_time)
     features = learn(aain_G, cfg)
     # import ipdb; ipdb.set_trace()
