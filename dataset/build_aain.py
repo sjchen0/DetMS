@@ -31,17 +31,18 @@ def build_snapshot(addr_data, tx_data, tx_in_data, tx_out_data, start_time, dura
     tx_data_filtered = tx_data_filtered[["txID", "btime"]]
     dict_to_btime = pd.Series(tx_data_filtered.btime.values, index=tx_data_filtered.txID).to_dict()
     tx_data_filtered_np = tx_data_filtered.to_numpy()
-    tx_in_data_filtered = tx_in_data[tx_in_data["txID"].isin(tx_data_filtered_np[:,0])]
-    tx_out_data_filtered = tx_out_data[tx_out_data["txID"].isin(tx_data_filtered_np[:,0])]
+    # use groupby() to handle duplicate input/output addresses
+    tx_in_data_filtered = tx_in_data[tx_in_data["txID"].isin(tx_data_filtered_np[:,0])].groupby(["txID","addrID"], as_index=False)["value"].sum()
+    tx_out_data_filtered = tx_out_data[tx_out_data["txID"].isin(tx_data_filtered_np[:,0])].groupby(["txID","addrID"], as_index=False)["value"].sum()
     tx_in_data_filtered_np = tx_in_data[tx_in_data["txID"].isin(tx_data_filtered_np[:,0])].to_numpy()
     tx_out_data_filtered_np = tx_out_data[tx_out_data["txID"].isin(tx_data_filtered_np[:,0])].to_numpy()
     t2 = time.time()
     # ipdb.set_trace()
     print("finished, using {:.2f} sec.".format(t2-t1))
-    print("start building AAIN snapshot...")
+    # print("start building AAIN snapshot...")
     # data structure of aain: addr_from, addr_to, txID, time
     aain = []
-    for txID in tqdm(tx_data_filtered_np[:,0]):
+    for txID in tqdm(tx_data_filtered_np[:,0], desc="building AAIN snapshot"):
         '''
         General rules for creating the weighted DiGraph:
         Situations can be that addrs_from is empty, or addrs_to is empty. These transactions are ignored. 
@@ -54,16 +55,18 @@ def build_snapshot(addr_data, tx_data, tx_in_data, tx_out_data, start_time, dura
         df_txin_txID = tx_in_data_filtered.loc[tx_in_data_filtered["txID"] == txID]
         df_txout_txID = tx_out_data_filtered.loc[tx_out_data_filtered["txID"] == txID]
         V = df_txin_txID["value"].sum()
-        a_v_txin_txID = df_txin_txID
-        a_v_txout_txID = df_txout_txID
-        if df_txin_txID.duplicated(subset=["addrID"]).any():
-            a_v_txin_txID = df_txin_txID.groupby(["addrID"], as_index=False)["value"].sum()
-        if df_txout_txID.duplicated(subset=["addrID"]).any():
-            a_v_txout_txID = df_txout_txID.groupby(["addrID"], as_index=False)["value"].sum()
-        addrs_from = a_v_txin_txID["addrID"].to_numpy()
-        vs_from = a_v_txin_txID["value"].to_numpy()
-        addrs_to = a_v_txout_txID["addrID"].to_numpy()
-        vs_to = a_v_txout_txID["value"].to_numpy()
+        # a_v_txin_txID = df_txin_txID
+        # a_v_txout_txID = df_txout_txID
+        # if df_txin_txID.duplicated(subset=["addrID"]).any():
+        #     print("duplicate!")
+        # a_v_txin_txID = df_txin_txID.groupby(["addrID"], as_index=False)["value"].sum()
+        # if df_txout_txID.duplicated(subset=["addrID"]).any():
+        #     print("duplicated!")
+        #     a_v_txout_txID = df_txout_txID.groupby(["addrID"], as_index=False)["value"].sum()
+        addrs_from = df_txin_txID["addrID"].to_numpy()
+        vs_from = df_txin_txID["value"].to_numpy()
+        addrs_to = df_txout_txID["addrID"].to_numpy()
+        vs_to = df_txout_txID["value"].to_numpy()
         if len(addrs_from) == 0 or len(addrs_to) == 0:
             continue
         btime = dict_to_btime[txID]
