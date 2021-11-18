@@ -3,8 +3,9 @@
     "ds1_path": "dataset1_2014_11_1500000/",
     "ds2_path": "dataset2_2015_6_1500000/",
     "ds3_path": "dataset3_2016_1_1500000/",
+    "snapshot_duration": 10800,
     "dimensions": 128,
-    "walk_length": 80,
+    "walk_length": 40,
     "num_walks": 10,
     "window_size": 10,
     "iter": 1,
@@ -12,5 +13,5 @@
     "p": 1,
     "q": 1,
     "weighted": true,
-    "directed": true
+    "directed": false
 }

@@ -19,6 +19,9 @@ sys.path.append("../../../dataset")
 import time
 import json
 from build_aain import *
+from collections import defaultdict
+import random
+import pickle
 
 def read_graph():
     '''
@@ -49,12 +52,36 @@ def learn(nx_G, cfg):
     '''
     Pipeline for representational learning for all nodes in a graph.
     '''
+
+    if not cfg["directed"]:
+        nx_G = nx_G.to_undirected()
     G = node2vec.Graph(nx_G, cfg["directed"], cfg["p"], cfg["q"])
     G.preprocess_transition_probs()
     walks = G.simulate_walks(cfg["num_walks"], cfg["walk_length"])
     features = learn_embeddings(walks)
     # import ipdb; ipdb.set_trace()
     return features
+
+
+def down_sample(walks, num_walks):
+    '''
+    ensure number of walks starting from each node = num_walks
+    '''
+    walk_dict = dict()
+    for walk in walks:
+        if walk[0] not in walk_dict.keys():
+            walk_dict[walk[0]] = [walk]
+        else:
+            walk_dict[walk[0]].append(walk)
+    for node in walk_dict.keys():
+        if len(walk_dict[node]) > num_walks:
+            random.shuffle(walk_dict[node])
+            walk_dict[node] = walk_dict[node][:num_walks]
+    ret = []
+    for w in walk_dict.values():
+        ret += w
+    # import ipdb; ipdb.set_trace()
+    return ret
 
 if __name__ == "__main__":
     with open("../../../config/config.json", "r") as f:
@@ -72,8 +99,32 @@ if __name__ == "__main__":
     ds_begin_time = tx_data["btime"].min()
     print(ds_begin_time)
     ds_end_time = tx_data["btime"].max()
+    print(ds_end_time)
     tx_in_data = data_dict["tx_in_data"]
     tx_out_data = data_dict["tx_out_data"]
-    aain, aain_G, tain = build_snapshot(addr_data, tx_data, tx_in_data, tx_out_data, ds_begin_time)
-    features = learn(aain_G, cfg)
+    start_time = ds_begin_time
+    duration = cfg['snapshot_duration']
+    walks = []
+    snapshot_cnt = 0
+    while start_time + duration <= ds_end_time:
+        print("start_time: {}, duration: {}".format(start_time, duration))
+        aain, aain_G, tain = build_snapshot(addr_data, tx_data, tx_in_data, tx_out_data, start_time, duration=duration)
+        if not cfg["directed"]:
+            aain_G = aain_G.to_undirected()
+        G = node2vec.Graph(aain_G, cfg["directed"], cfg["p"], cfg["q"])
+        G.preprocess_transition_probs()
+        walks_in_snapshot = G.simulate_walks(cfg["num_walks"], cfg["walk_length"])
+        walks += walks_in_snapshot
+        start_time += duration
+        snapshot_cnt += 1
+    # import ipdb; ipdb.set_trace()
+    with open("walks_temp.pkl", "rb") as f:
+        pickle.dump(walks, f)
+    # with open("walks_temp.pkl", "rb") as f:
+    #     walks = pickle.load(f)
+    down_sample(walks, cfg["num_walks"])
+    print("start learning embeddings...")
+    features = learn_embeddings(walks)
+    with open("features_temp.pkl", "rb") as g:
+        pickle.dump(features, g)
     # import ipdb; ipdb.set_trace()

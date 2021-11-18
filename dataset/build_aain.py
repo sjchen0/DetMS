@@ -54,19 +54,11 @@ def build_snapshot(addr_data, tx_data, tx_in_data, tx_out_data, start_time, dura
         '''
         df_txin_txID = tx_in_data_filtered.loc[tx_in_data_filtered["txID"] == txID]
         df_txout_txID = tx_out_data_filtered.loc[tx_out_data_filtered["txID"] == txID]
-        V = df_txin_txID["value"].sum()
-        # a_v_txin_txID = df_txin_txID
-        # a_v_txout_txID = df_txout_txID
-        # if df_txin_txID.duplicated(subset=["addrID"]).any():
-        #     print("duplicate!")
-        # a_v_txin_txID = df_txin_txID.groupby(["addrID"], as_index=False)["value"].sum()
-        # if df_txout_txID.duplicated(subset=["addrID"]).any():
-        #     print("duplicated!")
-        #     a_v_txout_txID = df_txout_txID.groupby(["addrID"], as_index=False)["value"].sum()
+        V = df_txin_txID["value"].sum() * 1e-5
         addrs_from = df_txin_txID["addrID"].to_numpy()
-        vs_from = df_txin_txID["value"].to_numpy()
+        vs_from = df_txin_txID["value"].to_numpy() * 1e-5 + 1e-8
         addrs_to = df_txout_txID["addrID"].to_numpy()
-        vs_to = df_txout_txID["value"].to_numpy()
+        vs_to = df_txout_txID["value"].to_numpy() * 1e-5 + 1e-8
         if len(addrs_from) == 0 or len(addrs_to) == 0:
             continue
         btime = dict_to_btime[txID]
@@ -110,7 +102,6 @@ def build_snapshot(addr_data, tx_data, tx_in_data, tx_out_data, start_time, dura
             values = tx_out_data_filtered["value"][out_dict[addrID]].to_numpy()
             tain[addrID]["incoming"] = np.array([txIDs, btimes, values])
     
-    # ipdb.set_trace()
     return aain, aain_G, tain
 
 def count_motif(addr_data, aain, tain):
